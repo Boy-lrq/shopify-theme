@@ -1,164 +1,241 @@
-{% comment %} 静态购物车数据构造 {% endcomment %}
-{% assign cart = hash %}
-{% assign cart.items = array %}
-{% assign cart.items[0] = hash %}
-{% assign cart.items[0].id = 1 %}
-{% assign cart.items[0].title = "男士运动跑鞋" %}
-{% assign cart.items[0].price = 29900 %}
-{% assign cart.items[0].line_price = 59800 %}
-{% assign cart.items[0].quantity = 2 %}
-{% assign cart.items[0].image = "https://cdn.shopify.com/s/files/1/0001/0002/products/shoe.jpg" %}
-{% assign cart.items[0].variant_id = 40194800615511 %}
-{% assign cart.items[0].properties = hash %}
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>购物车 - U-Mall</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .modal {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.5);
+      }
 
-{% assign cart.items[1] = hash %}
-{% assign cart.items[1].id = 2 %}
-{% assign cart.items[1].title = "无线蓝牙耳机" %}
-{% assign cart.items[1].price = 89900 %}
-{% assign cart.items[1].line_price = 89900 %}
-{% assign cart.items[1].quantity = 1 %}
-{% assign cart.items[1].image = "https://cdn.shopify.com/s/files/1/0001/0002/products/earphone.jpg" %}
-{% assign cart.items[1].variant_id = 40194800615512 %}
-{% assign cart.items[1].properties = hash %}
-
-{% assign cart.total_price = 149700 %}
-{% assign cart.item_count = 3 %}
-{% assign cart.currency = "CNY" %}
-
-{% assign discount_code = 'SUMMER30' %}
-{% assign discount_amount = 3000 %}
-
-<div class="min-h-screen bg-gray-50 font-sans">
-  <!-- 头部 -->
-  <header class="bg-white shadow-sm sticky top-0 z-10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
-        <a href="/" class="flex items-center space-x-2">
-          <span class="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
-            U-Mall
-          </span>
-        </a>
-        <div class="flex items-center space-x-4">
-          <span class="text-gray-600">购物车</span>
-          <span class="bg-orange-100 text-orange-600 px-2.5 py-0.5 rounded-full text-sm font-medium">
-            {{ cart.item_count }}
-          </span>
+      .modal-content {
+          position: relative;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: white;
+          padding: 2rem;
+          border-radius: 0.5rem;
+          max-width: 400px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="bg-white shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 py-4 flex items-center">
+        <h1 class="text-2xl font-bold text-orange-500">U-Mall</h1>
+        <div class="ml-8 flex items-center">
+          <span class="text-xl font-semibold">购物车</span>
+          <span class="ml-2 text-gray-500 cart-count">(0)</span>
         </div>
       </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+      <div class="flex gap-6">
+        <div class="flex-1 bg-white p-6 rounded-lg shadow-sm" id="cartItems">
+          <!-- 商品列表动态插入 -->
+        </div>
+
+        <!-- 结算栏 -->
+        <div class="w-96 bg-white p-6 rounded-lg shadow-sm h-fit">
+          <!-- 结算信息动态更新 -->
+        </div>
+      </div>
+    </main>
+
+    <!-- 优惠券弹窗 -->
+    <div class="modal" id="couponModal">
+      <div class="modal-content">
+        <h3 class="text-xl font-bold">限时优惠券</h3>
+        <p class="my-4">立即领取满 ¥299 减 ¥30 优惠券</p>
+        <button id="claimCoupon" class="bg-orange-500 text-white px-4 py-2 rounded">立即领取</button>
+      </div>
     </div>
-  </header>
 
-  <!-- 主要内容 -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="grid lg:grid-cols-3 gap-8">
-      <!-- 商品列表 -->
-      <div class="lg:col-span-2 space-y-6">
-        {% for item in cart.items %}
-          <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
-            <div class="flex p-6">
-              <!-- 商品图片 -->
-              <div class="flex-shrink-0 w-32 h-32">
-                <img
-                  src="{{ item.image }}"
-                  alt="{{ item.title }}"
-                  class="w-full h-full object-cover rounded-lg"
-                >
-              </div>
+    <script>
+        // 模拟数据
+        const cartInfo = [
+            {
+                id: 1,
+                userId: 1,
+                productId: 1,
+                name: "【年度会员】喜马拉雅VIP会员",
+                specs: "12个月 自动续费",
+                price: 198,
+                quantity: 1,
+                image: "https://example.com/product1.jpg"
+            }
+        ];
 
-              <!-- 商品信息 -->
-              <div class="ml-6 flex-1">
-                <h3 class="text-lg font-semibold text-gray-900">{{ item.title }}</h3>
+        // 状态管理
+        let state = {
+            items: [...cartInfo],
+            selectedIds: [],
+            coupon: 0
+        };
 
-                <!-- 价格信息 -->
-                <div class="mt-4 flex items-center justify-between">
-                  <div class="flex items-center space-x-6">
-                    <span class="text-2xl font-bold text-orange-500">
-                      ¥{{ item.price | divided_by: 100 | round: 2 }}
-                    </span>
-                    <div class="inline-flex items-center border border-gray-200 rounded-lg">
-                      <span class="px-4 py-1 text-gray-700">{{ item.quantity }}</span>
+        // 初始化
+        function init() {
+            renderCartItems();
+            updateSummary();
+            setupEventListeners();
+            checkCouponTrigger();
+        }
+
+        // 渲染商品列表
+        function renderCartItems() {
+            const container = document.getElementById('cartItems');
+            container.innerHTML = `
+                ${state.items.length > 0 ? `
+                    <div class="flex items-center mb-4">
+                        <input type="checkbox" id="selectAll" 
+                            ${state.selectedIds.length === state.items.length ? 'checked' : ''}
+                            class="w-4 h-4 text-orange-500 rounded border-gray-300">
+                        <span class="ml-2 text-gray-600">全选</span>
                     </div>
-                  </div>
+                ` : ''}
+                ${state.items.map(item => `
+                    <div class="flex items-center py-4 border-b">
+                        <input type="checkbox" 
+                            ${state.selectedIds.includes(item.id) ? 'checked' : ''}
+                            data-id="${item.id}"
+                            class="item-checkbox w-4 h-4 text-orange-500 rounded border-gray-300">
+                        <img src="${item.image}" class="w-32 h-32 object-cover rounded-lg ml-4">
+                        <div class="ml-6 flex-1">
+                            <h3 class="text-lg font-medium">${item.name}</h3>
+                            <p class="text-gray-500 mt-1">${item.specs}</p>
+                            <div class="flex items-center mt-4">
+                                <span class="text-xl font-bold text-orange-500">¥${item.price}</span>
+                                <div class="ml-8 flex items-center border rounded-lg">
+                                    <button data-id="${item.id}" class="decrement px-3 py-1 text-gray-500 hover:bg-gray-100">-</button>
+                                    <span class="px-4 quantity">${item.quantity}</span>
+                                    <button data-id="${item.id}" class="increment px-3 py-1 text-gray-500 hover:bg-gray-100">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 ml-6">
+                            <button data-id="${item.id}" class="delete text-gray-400 hover:text-orange-500">删除</button>
+                        </div>
+                    </div>
+                `).join('') || `
+                    <div class="py-8 text-center text-gray-500">
+                        购物车中没有商品，<a href="/" class="text-orange-500 hover:underline">去添加</a>
+                    </div>
+                `}
+            `;
+
+            document.querySelector('.cart-count').textContent = `(${state.items.length})`;
+        }
+
+        // 更新结算信息
+        function updateSummary() {
+            const subtotal = state.items.reduce((sum, item) => 
+                state.selectedIds.includes(item.id) ? sum + item.price * item.quantity : sum, 0);
+            
+            document.querySelector('#cartItems + div').innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex justify-between">
+                        <span>商品总价</span>
+                        <span>¥${subtotal}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>优惠</span>
+                        <span class="text-red-500">-¥${state.coupon}</span>
+                    </div>
+                    <div class="pt-4 border-t">
+                        <div class="flex justify-between text-xl font-bold">
+                            <span>实付款</span>
+                            <span class="text-orange-500">¥${subtotal - state.coupon}</span>
+                        </div>
+                    </div>
+                    <button class="w-full py-4 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
+                        去结算 (${state.selectedIds.length})
+                    </button>
                 </div>
-              </div>
-            </div>
-          </div>
-        {% endfor %}
-      </div>
+            `;
+        }
 
-      <!-- 订单摘要 -->
-      <div class="lg:col-span-1">
-        <div class="bg-white rounded-xl shadow-sm p-6 sticky top-24">
-          <h2 class="text-xl font-bold text-gray-900 mb-6">订单摘要</h2>
+        // 事件监听
+        function setupEventListeners() {
+            // 全选
+            document.getElementById('selectAll')?.addEventListener('change', toggleAll);
+            
+            // 单项选择
+            document.querySelectorAll('.item-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', () => toggleItem(Number(checkbox.dataset.id)));
+            });
 
-          <div class="space-y-4">
-            <!-- 价格明细 -->
-            <div class="flex justify-between text-gray-600">
-              <span>商品总价</span>
-              <span class="font-medium">¥{{ cart.total_price | divided_by: 100 | round: 2 }}</span>
-            </div>
+            // 数量调整
+            document.querySelectorAll('.increment').forEach(btn => {
+                btn.addEventListener('click', () => adjustQuantity(Number(btn.dataset.id), 1));
+            });
+            
+            document.querySelectorAll('.decrement').forEach(btn => {
+                btn.addEventListener('click', () => adjustQuantity(Number(btn.dataset.id), -1));
+            });
 
-            <div class="flex justify-between text-green-600">
-              <span>运费减免</span>
-              <span class="font-medium">- ¥0.00</span>
-            </div>
+            // 删除商品
+            document.querySelectorAll('.delete').forEach(btn => {
+                btn.addEventListener('click', () => deleteItem(Number(btn.dataset.id)));
+            });
 
-            <div class="flex justify-between text-red-600">
-              <span>优惠折扣 ({{ discount_code }})</span>
-              <span class="font-medium">- ¥{{ discount_amount | divided_by: 100 }}</span>
-            </div>
+            // 领取优惠券
+            document.getElementById('claimCoupon').addEventListener('click', () => {
+                state.coupon = 30;
+                document.getElementById('couponModal').style.display = 'none';
+                updateSummary();
+            });
+        }
 
-            <!-- 分隔线 -->
-            <div class="border-t border-gray-200 my-4"></div>
+        // 核心功能函数
+        function toggleAll() {
+            state.selectedIds = state.selectedIds.length === state.items.length ? 
+                [] : state.items.map(i => i.id);
+            renderCartItems();
+            updateSummary();
+        }
 
-            <!-- 实付金额 -->
-            <div class="flex justify-between text-lg font-bold text-gray-900">
-              <span>总金额</span>
-              <span class="text-orange-500">
-                ¥{{ cart.total_price | minus: discount_amount | divided_by: 100 | round: 2 }}
-              </span>
-            </div>
+        function toggleItem(id) {
+            state.selectedIds = state.selectedIds.includes(id) ?
+                state.selectedIds.filter(i => i !== id) :
+                [...state.selectedIds, id];
+            updateSummary();
+        }
 
-            <!-- 操作按钮 -->
-            <button
-              class="
-                w-full mt-6 py-3.5 bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-lg
-                font-medium hover:from-orange-500 hover:to-orange-600 transition-all duration-200
-                disabled:opacity-50 disabled:cursor-not-allowed
-              "
-              disabled
-            >
-              安全结算 ({{ cart.items.size }})
-            </button>
-          </div>
+        function adjustQuantity(id, delta) {
+            state.items = state.items.map(item => 
+                item.id === id ? {...item, quantity: Math.max(1, item.quantity + delta)} : item
+            );
+            renderCartItems();
+            updateSummary();
+        }
 
-          <!-- 促销信息 -->
-          <div class="mt-6 pt-4 border-t border-gray-200">
-            <div class="flex items-start space-x-2">
-              <div class="flex-shrink-0 mt-1">
-                <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                </svg>
-              </div>
-              <p class="text-sm text-gray-500">
-                已自动应用优惠码 <span class="font-medium text-green-600">{{ discount_code }}</span><br>
-                订单满 ¥199 享免运费
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-</div>
+        function deleteItem(id) {
+            state.items = state.items.filter(item => item.id !== id);
+            state.selectedIds = state.selectedIds.filter(i => i !== id);
+            renderCartItems();
+            updateSummary();
+        }
 
-<style>
-  @tailwind base;
-  @tailwind components;
-  @tailwind utilities;
+        // 优惠券触发逻辑
+        function checkCouponTrigger() {
+            const subtotal = state.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            if (subtotal >= 299) {
+                document.getElementById('couponModal').style.display = 'block';
+            }
+        }
 
-  /* 自定义渐变文字 */
-  .gradient-text {
-    @apply bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent;
-  }
-</style>
+        // 启动
+        init();
+    </script>
+  </body>
+</html>
