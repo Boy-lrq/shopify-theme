@@ -1,6 +1,104 @@
-{% schema %}
-  {
-    "name": "Section name",
-    "settings": []
+{% comment %} 在Shopify后台创建对应页面时选择这个模板 {% endcomment %}
+
+{{ 'section-main-product.css' | asset_url | stylesheet_tag }}
+
+<style>
+  /* 保留原有CSS样式 */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
   }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell;
+    background-color: #f5f5f5;
+  }
+
+  /* 其他样式保持不变... */
+</style>
+
+<div class="container">
+  <!-- 筛选器部分保持不变 -->
+  <div class="filters">
+    <input type="text" class="search-input" placeholder="搜索商品..." id="search">
+    <select class="select-filter" id="category">
+      <option value="">全部分类</option>
+      <option value="电子产品">电子产品</option>
+      <option value="运动鞋">运动鞋</option>
+    </select>
+    <select class="select-filter" id="price">
+      <option value="0-10000">全部价格</option>
+      <option value="0-5000">¥5000以下</option>
+      <option value="5000-10000">¥5000-10000</option>
+      <option value="10000-20000">¥10000+以上</option>
+    </select>
+  </div>
+
+  <!-- 商品列表容器 -->
+  <div class="product-list" id="product-container">
+    {% comment %} 使用Liquid循环输出商品 {% endcomment %}
+    {%- capture products_json -%}
+      [
+        {% for i in (1..20) %}
+          {
+            "id": {{ forloop.index }},
+            "name": "商品 {{ forloop.index }}",
+            "price": {{ 1000 | times: forloop.index }},
+            "category": "{% cycle '电子产品', '运动鞋' %}",
+            "image": "https://picsum.photos/280/200?{{ forloop.index }}",
+            "stock": {% cycle 5, 20, 8, 15, 3, 18, 7, 12, 2, 25, 6, 10, 4, 17, 9, 5, 11, 14, 3, 20 %}
+          }{% unless forloop.last %},{% endunless %}
+        {% endfor %}
+      ]
+    {%- endcapture -%}
+  </div>
+
+  <!-- 分页部分保持不变 -->
+  <div class="pagination">
+    <button id="prev-page">上一页</button>
+    <span id="current-page">1</span>
+    <button id="next-page">下一页</button>
+  </div>
+</div>
+
+<script>
+  // 使用Liquid输出商品数据
+  const products = {{ products_json }};
+
+  // 其他JavaScript逻辑保持不变...
+  let currentPage = 1;
+  const pageSize = 10;
+
+  function filterProducts() {
+    // ...原有过滤逻辑...
+  }
+
+  // ...其他函数和事件监听保持不变...
+</script>
+
+{% schema %}
+{
+  "name": "Product List Page",
+  "settings": [
+    {
+      "type": "header",
+      "content": "商品列表页设置"
+    },
+    {
+      "type": "range",
+      "id": "page_size",
+      "label": "每页商品数",
+      "min": 6,
+      "max": 24,
+      "step": 3,
+      "default": 12
+    }
+  ],
+  "presets": [
+    {
+      "name": "商品列表页"
+    }
+  ]
+}
 {% endschema %}
