@@ -28,34 +28,57 @@
 {% assign discount_code = 'SUMMER30' %}
 {% assign discount_amount = 3000 %}
 
-<div class="min-h-screen bg-gray-50">
-  <header class="bg-white shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center">
-      <h1 class="text-2xl font-bold text-orange-500">U-Mall</h1>
-      <div class="ml-8 flex items-center">
-        <span class="text-xl font-semibold">购物车</span>
-        <span class="ml-2 text-gray-500">({{ cart.item_count }})</span>
+<div class="min-h-screen bg-gray-50 font-sans">
+  <!-- 头部 -->
+  <header class="bg-white shadow-sm sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="/" class="flex items-center space-x-2">
+          <span class="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+            U-Mall
+          </span>
+        </a>
+        <div class="flex items-center space-x-4">
+          <span class="text-gray-600">购物车</span>
+          <span class="bg-orange-100 text-orange-600 px-2.5 py-0.5 rounded-full text-sm font-medium">
+            {{ cart.item_count }}
+          </span>
+        </div>
       </div>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-4 py-6">
-    <div class="flex gap-6">
+  <!-- 主要内容 -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid lg:grid-cols-3 gap-8">
       <!-- 商品列表 -->
-      <div class="flex-1 bg-white p-6 rounded-lg shadow-sm">
+      <div class="lg:col-span-2 space-y-6">
         {% for item in cart.items %}
-          <div class="flex items-center py-4 border-b">
-            <img
-              src="{{ item.image }}"
-              alt="{{ item.title }}"
-              class="w-32 h-32 object-cover rounded-lg"
-            >
-            <div class="ml-6 flex-1">
-              <h3 class="text-lg font-medium">{{ item.title }}</h3>
-              <div class="flex items-center mt-4">
-                <span class="text-xl font-bold text-orange-500"> ¥{{ item.price | divided_by: 100 | round: 2 }} </span>
-                <div class="ml-8 flex items-center border rounded-lg">
-                  <span class="px-4">{{ item.quantity }}</span>
+          <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div class="flex p-6">
+              <!-- 商品图片 -->
+              <div class="flex-shrink-0 w-32 h-32">
+                <img
+                  src="{{ item.image }}"
+                  alt="{{ item.title }}"
+                  class="w-full h-full object-cover rounded-lg"
+                >
+              </div>
+
+              <!-- 商品信息 -->
+              <div class="ml-6 flex-1">
+                <h3 class="text-lg font-semibold text-gray-900">{{ item.title }}</h3>
+
+                <!-- 价格信息 -->
+                <div class="mt-4 flex items-center justify-between">
+                  <div class="flex items-center space-x-6">
+                    <span class="text-2xl font-bold text-orange-500">
+                      ¥{{ item.price | divided_by: 100 | round: 2 }}
+                    </span>
+                    <div class="inline-flex items-center border border-gray-200 rounded-lg">
+                      <span class="px-4 py-1 text-gray-700">{{ item.quantity }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -63,47 +86,66 @@
         {% endfor %}
       </div>
 
-      <!-- 结算栏 -->
-      <div class="w-96 bg-white p-6 rounded-lg shadow-sm h-fit">
-        <div class="space-y-4">
-          <div class="flex justify-between">
-            <span>商品总价</span>
-            <span>¥{{ cart.total_price | divided_by: 100 | round: 2 }}</span>
-          </div>
+      <!-- 订单摘要 -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-xl shadow-sm p-6 sticky top-24">
+          <h2 class="text-xl font-bold text-gray-900 mb-6">订单摘要</h2>
 
-          <div class="flex justify-between">
-            <span>运费</span>
-            <span class="text-green-500">免运费</span>
-          </div>
+          <div class="space-y-4">
+            <!-- 价格明细 -->
+            <div class="flex justify-between text-gray-600">
+              <span>商品总价</span>
+              <span class="font-medium">¥{{ cart.total_price | divided_by: 100 | round: 2 }}</span>
+            </div>
 
-          <div class="flex justify-between">
-            <span>优惠 ({{ discount_code }})</span>
-            <span class="text-red-500">-¥{{ discount_amount | divided_by: 100 }}</span>
-          </div>
+            <div class="flex justify-between text-green-600">
+              <span>运费减免</span>
+              <span class="font-medium">- ¥0.00</span>
+            </div>
 
-          <div class="pt-4 border-t">
-            <div class="flex justify-between text-xl font-bold">
-              <span>实付款</span>
+            <div class="flex justify-between text-red-600">
+              <span>优惠折扣 ({{ discount_code }})</span>
+              <span class="font-medium">- ¥{{ discount_amount | divided_by: 100 }}</span>
+            </div>
+
+            <!-- 分隔线 -->
+            <div class="border-t border-gray-200 my-4"></div>
+
+            <!-- 实付金额 -->
+            <div class="flex justify-between text-lg font-bold text-gray-900">
+              <span>总金额</span>
               <span class="text-orange-500">
                 ¥{{ cart.total_price | minus: discount_amount | divided_by: 100 | round: 2 }}
               </span>
             </div>
+
+            <!-- 操作按钮 -->
+            <button
+              class="
+                w-full mt-6 py-3.5 bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-lg
+                font-medium hover:from-orange-500 hover:to-orange-600 transition-all duration-200
+                disabled:opacity-50 disabled:cursor-not-allowed
+              "
+              disabled
+            >
+              安全结算 ({{ cart.items.size }})
+            </button>
           </div>
 
-          <button
-            class="w-full py-4 bg-orange-500 text-white rounded-lg cursor-not-allowed"
-            disabled
-          >
-            去结算 ({{ cart.items.size }})
-          </button>
-        </div>
-
-        <div class="mt-6 p-4 bg-gray-50 rounded-lg">
-          <p class="text-sm text-gray-500">
-            · 已自动应用优惠码：{{ discount_code -}}
-            <br>
-            · 已享受免运费优惠
-          </p>
+          <!-- 促销信息 -->
+          <div class="mt-6 pt-4 border-t border-gray-200">
+            <div class="flex items-start space-x-2">
+              <div class="flex-shrink-0 mt-1">
+                <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <p class="text-sm text-gray-500">
+                已自动应用优惠码 <span class="font-medium text-green-600">{{ discount_code }}</span><br>
+                订单满 ¥199 享免运费
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -114,4 +156,9 @@
   @tailwind base;
   @tailwind components;
   @tailwind utilities;
+
+  /* 自定义渐变文字 */
+  .gradient-text {
+    @apply bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent;
+  }
 </style>
