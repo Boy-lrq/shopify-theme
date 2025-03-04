@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ collection.title | default: '商品列表' }}</title>
+    <title>商品列表</title>
     <style>
       * {
           box-sizing: border-box;
@@ -124,63 +124,44 @@
         <input type="text" class="search-input" placeholder="搜索商品..." id="search">
         <select class="select-filter" id="category">
           <option value="">全部分类</option>
-          {% for product_type in shop.types %}
-            {% if product_type != blank %}
-              <option
-                value="{{ product_type }}"
-                {% if current_tags contains product_type %}
-                  selected
-                {% endif %}
-              >
-                {{ product_type }}
-              </option>
-            {% endif %}
-          {% endfor %}
+          <option value="电子产品">电子产品</option>
+          <option value="运动鞋">运动鞋</option>
         </select>
         <select class="select-filter" id="price">
-          <option value="0-Infinity">全部价格</option>
+          <option value="0-10000">全部价格</option>
           <option value="0-5000">¥5000以下</option>
           <option value="5000-10000">¥5000-10000</option>
-          <option value="10000-Infinity">¥10000+以上</option>
+          <option value="10000-20000">¥10000+以上</option>
         </select>
       </div>
 
       <div class="product-list" id="product-container">
-        {% paginate collection.products by 1000 %}
-          {% for product in collection.products %}
-            <div
-              class="product-card"
-              data-name="{{ product.title | downcase }}"
-              data-category="{{ product.type }}"
-              data-price="{{ product.price }}"
+        {% assign products = '智能手机 X1,运动跑鞋 S200,智能手表 W3,篮球鞋 B-45,无线耳机 E10,跑鞋 R-2000,平板电脑 T8,登山鞋 M9,笔记本电脑 P15,休闲鞋 C20'
+          | split: ','
+        %}
+        {% for product in products %}
+          <div class="product-card">
+            <img
+              class="product-image"
+              src="https://pic1.zhimg.com/70/v2-682cef8220ab72084df1a551452e8ede_300w.avis?{{ forloop.index }}"
+              alt="{{ product }}"
             >
-              <img
-                class="product-image"
-                src="{{ product.featured_image | img_url: '280x200', crop: 'center' }}"
-                alt="{{ product.title }}"
-              >
-              <div class="product-content">
-                <h3 class="product-title">{{ product.title }}</h3>
-                <div class="price-stock">
-                  <span class="price">{{ product.price | money }}</span>
-                  {% if product.variants.first.inventory_quantity < 10
-                    and product.variants.first.inventory_management != null
-                  %}
-                    <span class="low-stock">🔥缺货</span>
-                  {% endif %}
-                </div>
-                <p>{{ product.type }}</p>
-                <div class="actions">
-                  <form method="post" action="/cart/add">
-                    <input type="hidden" name="id" value="{{ product.variants.first.id }}">
-                    <button type="submit" class="btn btn-primary">加入购物车</button>
-                  </form>
-                  <a href="{{ product.url }}" class="btn btn-link">查看详情</a>
-                </div>
+            <div class="product-content">
+              <h3 class="product-title">{{ product }}</h3>
+              <div class="price-stock">
+                <span class="price">¥{{ 999 | times: forloop.index }}</span>
+                {% if forloop.index < 5 %}
+                  <span class="low-stock">🔥缺货</span>
+                {% endif %}
+              </div>
+              <p>{% cycle '电子产品', '运动鞋' %}</p>
+              <div class="actions">
+                <button class="btn btn-primary">加入购物车</button>
+                <button class="btn btn-link">查看详情</button>
               </div>
             </div>
-          {% endfor %}
-        {% endpaginate %}
+          </div>
+        {% endfor %}
       </div>
 
       <div class="pagination">
@@ -191,93 +172,88 @@
     </div>
 
     <script>
-// Liquid数据注入
-const shopifyProducts = [
-    {% for product in collection.products %}
-    {
-        id: {{ product.id | json }},
-        name: {{ product.title | json }},
-        price: {{ product.price }},
-        category: {{ product.type | json }},
-        image: {{ product.featured_image | img_url: '280x200' | json }},
-        stock: {{ product.variants.first.inventory_quantity | default: 0 }},
-        available: {{ product.available | json }}
-    }{% unless forloop.last %},{% endunless %}
-    {% endfor %}
-];
+    // Liquid生成的过滤数据
+    const products = [
+        {% for i in (1..10) %}
+        {
+            id: {{ i }},
+            name: '{% cycle "智能手机 X1", "运动跑鞋 S200", "智能手表 W3", "篮球鞋 B-45", "无线耳机 E10", "跑鞋 R-2000", "平板电脑 T8", "登山鞋 M9", "笔记本电脑 P15", "休闲鞋 C20" %}',
+            price: {{ 999 | times: forloop.index }},
+            category: '{% cycle "电子产品", "运动鞋" %}',
+            image: 'https://pic1.zhimg.com/70/v2-682cef8220ab72084df1a551452e8ede_300w.avis?{{ i }}',
+            stock: {% if i < 5 %}5{% else %}20{% endif %}
+        }{% unless forloop.last %},{% endunless %}
+        {% endfor %}
+    ];
 
-// 分页系统
-let currentPage = 1;
-const pageSize = 10;
+    let currentPage = 1;
+    const pageSize = 10;
 
-function filterProducts() {
-    const searchTerm = document.getElementById('search').value.toLowerCase();
-    const category = document.getElementById('category').value;
-    const priceRange = document.getElementById('price').value.split('-').map(v => v === 'Infinity' ? Infinity : Number(v));
+    function filterProducts() {
+        const searchTerm = document.getElementById('search').value.toLowerCase();
+        const category = document.getElementById('category').value;
+        const priceRange = document.getElementById('price').value.split('-').map(Number);
 
-    return shopifyProducts.filter(product => {
-        const nameMatch = product.name.toLowerCase().includes(searchTerm);
-        const categoryMatch = !category || product.category === category;
-        const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
-        return nameMatch && categoryMatch && priceMatch;
-    });
-}
+        return products.filter(product => {
+            const nameMatch = product.name.toLowerCase().includes(searchTerm);
+            const categoryMatch = !category || product.category === category;
+            const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
+            return nameMatch && categoryMatch && priceMatch;
+        });
+    }
 
-function renderProducts() {
-    const filtered = filterProducts();
-    const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-    const container = document.getElementById('product-container');
-    
-    container.innerHTML = paginated.map(product => `
+    function renderProducts() {
+        const filtered = filterProducts();
+        const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+        const container = document.getElementById('product-container');
+
+        container.innerHTML = paginated.map(product => `
         <div class="product-card">
             <img class="product-image" src="${product.image}" alt="${product.name}">
             <div class="product-content">
                 <h3 class="product-title">${product.name}</h3>
                 <div class="price-stock">
-                    <span class="price">${Shopify.formatMoney(product.price, '{{ shop.money_format }}')}</span>
-                    ${product.stock < 10 && product.available ? '<span class="low-stock">🔥缺货</span>' : ''}
+                    <span class="price">¥${product.price}</span>
+                    ${product.stock < 10 ? '<span class="low-stock">🔥缺货</span>' : ''}
                 </div>
                 <p>${product.category}</p>
                 <div class="actions">
-                    <form method="post" action="/cart/add">
-                        <input type="hidden" name="id" value="${product.id}">
-                        <button type="submit" class="btn btn-primary">加入购物车</button>
-                    </form>
-                    <a href="/products/${product.handle}" class="btn btn-link">查看详情</a>
+                    <button class="btn btn-primary">加入购物车</button>
+                    <button class="btn btn-link">查看详情</button>
                 </div>
             </div>
         </div>
     `).join('');
 
-    document.getElementById('current-page').textContent = currentPage;
-}
+        document.getElementById('current-page').textContent = currentPage;
+    }
 
-// 事件监听
-document.getElementById('search').addEventListener('input', () => {
-    currentPage = 1;
+    // 事件监听
+    document.getElementById('search').addEventListener('input', () => {
+        currentPage = 1;
+        renderProducts();
+    });
+
+    document.getElementById('category').addEventListener('change', renderProducts);
+    document.getElementById('price').addEventListener('change', renderProducts);
+
+    document.getElementById('prev-page').addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderProducts();
+        }
+    });
+
+    document.getElementById('next-page').addEventListener('click', () => {
+        const filtered = filterProducts();
+        if (currentPage < Math.ceil(filtered.length / pageSize)) {
+            currentPage++;
+            renderProducts();
+        }
+    });
+
+    // 初始渲染
     renderProducts();
-});
-
-document.getElementById('category').addEventListener('change', renderProducts);
-document.getElementById('price').addEventListener('change', renderProducts);
-
-document.getElementById('prev-page').addEventListener('click', () => {
-    if (currentPage > 1) {
-        currentPage--;
-        renderProducts();
-    }
-});
-
-document.getElementById('next-page').addEventListener('click', () => {
-    const filtered = filterProducts();
-    if (currentPage < Math.ceil(filtered.length / pageSize)) {
-        currentPage++;
-        renderProducts();
-    }
-});
-
-// 初始化
-renderProducts();
     </script>
   </body>
 </html>
