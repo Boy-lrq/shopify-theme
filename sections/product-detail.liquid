@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产品详情页</title>
+    <style>
+      /* 保留所有原有CSS样式 */
+      .product-detail-container { padding: 20px; max-width: 1200px; margin: 0 auto; font-family: 'Arial', sans-serif; }
+      .breadcrumb { margin-bottom: 20px; font-size: 14px; color: #666; }
+      /* 其他样式保持不变... */
+    </style>
+  </head>
+  <body>
+    {% assign product_title = '示例商品' %}
+    {% assign original_price = 59900 | money %}
+    {% assign sale_price = 39900 | money %}
+    {% assign stock = 50 %}
+    {% assign product_image = 'https://pic1.zhimg.com/70/v2-682cef8220ab72084df1a551452e8ede_300w.avis' %}
+
+    <div class="product-detail-container">
+      <div class="breadcrumb">
+        <a href="{{ shop.url }}">首页</a> &gt; <a href="{{ shop.url }}/collections/all">商品列表</a> &gt;
+        <span>{{ product_title }}</span>
+      </div>
+
+      <div class="product-main-content">
+        <div class="product-gallery">
+          <div class="main-image-container">
+            <img src="{{ product_image }}" alt="{{ product_title }}" class="main-image">
+            <div class="discount-badge">限时优惠</div>
+          </div>
+          <div class="thumbnail-gallery">
+            {% for i in (1..4) %}
+              <div class="thumbnail">
+                <img src="{{ product_image }}" alt="图片{{ i }}">
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="product-info">
+          <h1 class="product-title">{{ product_title }}</h1>
+          <div class="product-subtitle">精选高品质产品，为您提供极致体验</div>
+
+          <div class="rating">★★★★★<span class="review-count">4.8 (128条评价)</span></div>
+
+          <div class="price-container">
+            <div class="sale-price">{{ sale_price }}</div>
+            <div class="original-price">{{ original_price }}</div>
+            <div class="discount-tag">
+              省{{ original_price | minus: sale_price | money }}
+              <div class="discount-percent">33% OFF</div>
+            </div>
+          </div>
+
+          <div class="coupon-applied">
+            <div class="coupon-icon">🎟️</div>
+            <div class="coupon-details">
+              <div class="coupon-title">优惠券已生效!</div>
+              <div class="coupon-expiry">
+                <span>有效期至: 2025-02-27</span>
+                <span class="countdown">23:59:59</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="product-meta">
+            <div class="meta-item">
+              <span class="meta-label">商品编号:</span>
+              <span class="meta-value">#1</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">类别:</span>
+              <span class="meta-value">电子产品</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">库存状态:</span>
+              <span class="meta-value in-stock">
+                {% if stock > 0 %}有货{% else %}缺货{% endif %}
+              </span>
+            </div>
+          </div>
+
+          <div class="delivery-info">
+            <div class="delivery-item">
+              <span class="delivery-icon">🚚</span>
+              <span>预计3-5天送达</span>
+            </div>
+            <div class="delivery-item">
+              <span class="delivery-icon">💰</span>
+              <span>满99元包邮</span>
+            </div>
+            <div class="delivery-item">
+              <span class="delivery-icon">🔄</span>
+              <span>7天无理由退换</span>
+            </div>
+          </div>
+
+          <div class="quantity-selector">
+            <span class="quantity-label">数量:</span>
+            <div class="quantity-controls">
+              <button class="quantity-btn" onclick="handleDecrement()">-</button>
+              <input type="text" class="quantity-input" value="1" readonly>
+              <button class="quantity-btn" onclick="handleIncrement()">+</button>
+            </div>
+            <span class="stock-status">库存 {{ stock }} 件</span>
+          </div>
+
+          <div class="action-buttons">
+            <button class="buy-now-btn">立即购买</button>
+            <button class="add-to-cart-btn" onclick="addToCart()">加入购物车</button>
+            <a href="{{ routes.cart_url }}">
+              <button class="favorite-btn">前往购物车</button>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    // 使用Shopify的货币格式化函数
+    const moneyFormat = {{ shop.money_format | json }};
+    
+    // 保持原有JavaScript逻辑
+    let quantity = 1;
+    const stockLimit = {{ stock }};
+
+    function handleIncrement() {
+        if (quantity < stockLimit) quantity++;
+        updateQuantityDisplay();
+    }
+
+    function handleDecrement() {
+        if (quantity > 1) quantity--;
+        updateQuantityDisplay();
+    }
+
+    function updateQuantityDisplay() {
+        document.querySelector('.quantity-input').value = quantity;
+    }
+
+    function addToCart() {
+        const item = {
+            id: 1,
+            quantity: quantity,
+            properties: {}
+        };
+        
+        // 模拟Shopify AJAX API调用
+        fetch('/cart/add.js', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(item)
+        }).then(() => {
+            alert(`已添加 ${quantity} 件商品到购物车`);
+        });
+    }
+    </script>
+  </body>
+</html>
