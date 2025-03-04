@@ -1,0 +1,15 @@
+# 文件名: templates/page.welcome.liquid
+{% layout 'theme' %}  # 继承主布局
+
+{% section 'welcome-hero' %}  # 调用一个自定义区块
+{% section 'welcome-features' %}
+
+<style>
+    /* 页面专属CSS */
+    .welcome-banner { height: 100vh }
+</style>
+
+{% javascript %}
+// 页面专属JS
+console.log('Welcome!')
+{% endjavascript %}

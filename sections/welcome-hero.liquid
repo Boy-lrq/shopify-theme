@@ -1,0 +1,24 @@
+# 文件名: sections/welcome-hero.liquid
+<section class="welcome-banner">
+    <h1>{{ section.settings.title }}</h1>
+    {{ section.settings.content }}
+</section>
+
+{% schema %}
+{
+  "name": "Welcome Hero",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "标题",
+      "default": "欢迎来到我们的商店！"
+    },
+    {
+      "type": "richtext",
+      "id": "content",
+      "label": "内容"
+    }
+  ]
+}
+{% endschema %}
