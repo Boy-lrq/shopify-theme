@@ -1,83 +1,146 @@
 {% comment %} 模板文件: templates/cart.liquid {% endcomment %}
 {% layout 'theme' %}
 
-{% comment %} 静态数据定义（兼容写法） {% endcomment %}
-{% assign items = "" | split: "," %}
-{% capture item1 %}
-{
-  "id": 1,
-  "name": "男士运动鞋",
-  "price": 29900,
-  "quantity": 2,
-  "specs": "黑色/42码",
-  "image": "https://example.com/shoes.jpg"
-}
-{% endcapture %}
-{% assign items = items | push: item1 %}
+{% comment %} 使用 Liquid 对象定义静态数据 {% endcomment %}
+{%- capture static_cart_data -%}
+[
+  {
+    "id": 1,
+    "name": "男士运动鞋",
+    "price": 29900,
+    "quantity": 2,
+    "specs": "黑色/42码",
+    "image": "https://example.com/shoes.jpg"
+  },
+  {
+    "id": 2,
+    "name": "无线蓝牙耳机", 
+    "price": 19900,
+    "quantity": 1,
+    "specs": "白色/降噪版",
+    "image": "https://example.com/earphones.jpg"
+  }
+]
+{%- endcapture -%}
 
-{% capture item2 %}
-{
-  "id": 2,
-  "name": "无线蓝牙耳机",
-  "price": 19900,
-  "quantity": 1,
-  "specs": "白色/降噪版",
-  "image": "https://example.com/earphones.jpg"
-}
-{% endcapture %}
-{% assign items = items | push: item2 %}
-
-{% assign selected_ids = "1,2" | split: "," %}
-{% assign coupon_amount = 3000 %}
-{% assign subtotal = 79700 %}
-{% assign total = subtotal | minus: coupon_amount %}
+{%- assign items = static_cart_data | parse_json -%}
+{%- assign selected_ids = '1,2' | split: ',' -%}
+{%- assign coupon_amount = 3000 -%}
+{%- assign subtotal = 79700 -%}
+{%- assign total = subtotal | minus: coupon_amount -%}
 
 <div class="min-h-screen bg-gray-50">
-  <!-- 保持原有结构不变 -->
-  <!-- ... -->
+  <header class="bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center">
+      <h1 class="text-2xl font-bold text-orange-500">U-Mall</h1>
+      <div class="ml-8 flex items-center">
+        <span class="text-xl font-semibold">购物车</span>
+        <span class="ml-2 text-gray-500">({{ items.size }})</span>
+      </div>
+    </div>
+  </header>
 
   <main class="max-w-7xl mx-auto px-4 py-6">
     <div class="flex gap-6">
       <div class="flex-1 bg-white p-6 rounded-lg shadow-sm">
         {% if items.size > 0 %}
-          <!-- ... -->
+          <div class="flex items-center mb-4">
+            <input
+              type="checkbox"
+              checked
+              readonly
+              class="w-4 h-4 text-orange-500 rounded border-gray-300"
+            >
+            <span class="ml-2 text-gray-600">全选</span>
+          </div>
         {% endif %}
 
         {% if items.size == 0 %}
-          <!-- ... -->
+          <div class="py-8 text-center text-gray-500">
+            购物车中没有商品，<a href="/" class="text-orange-500 hover:underline">去添加</a>
+          </div>
         {% else %}
-          {% for item_string in items %}
-            {% assign item = item_string | strip | parse_json %}
+          {% for item in items %}
             <div class="flex items-center py-4 border-b">
               <input
                 type="checkbox"
-                {% if selected_ids contains item.id %}checked{% endif %}
+                {% if selected_ids contains item.id %}
+                  checked
+                {% endif %}
                 readonly
                 class="w-4 h-4 text-orange-500 rounded border-gray-300"
-              />
+              >
               <img
                 src="{{ item.image }}"
                 alt="{{ item.name }}"
                 class="w-32 h-32 object-cover rounded-lg ml-4"
-              />
+              >
               <div class="ml-6 flex-1">
                 <h3 class="text-lg font-medium">{{ item.name }}</h3>
                 <p class="text-gray-500 mt-1">{{ item.specs }}</p>
                 <div class="flex items-center mt-4">
-                  <span class="text-xl font-bold text-orange-500">
-                    ¥{{ item.price | divided_by: 100 }}
-                  </span>
+                  <span class="text-xl font-bold text-orange-500"> ¥{{ item.price | divided_by: 100 | round }} </span>
                   <div class="ml-8 flex items-center border rounded-lg">
                     <span class="px-4">{{ item.quantity }}</span>
                   </div>
                 </div>
               </div>
-              <!-- ... -->
+              <div class="flex gap-4 ml-6">
+                <span class="text-gray-400 cursor-not-allowed">删除</span>
+                <span class="text-gray-400 cursor-not-allowed">收藏</span>
+              </div>
             </div>
           {% endfor %}
         {% endif %}
       </div>
-      <!-- ... -->
+
+      <!-- 结算栏 -->
+      <div class="w-96 bg-white p-6 rounded-lg shadow-sm h-fit">
+        <div class="space-y-4">
+          <div class="flex justify-between">
+            <span>商品总价</span>
+            <span>¥{{ subtotal | divided_by: 100 | round }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>运费</span>
+            <span class="text-green-500">免运费</span>
+          </div>
+          <div class="flex justify-between">
+            <span>优惠</span>
+            <span class="text-red-500">-¥{{ coupon_amount | divided_by: 100 | round }}</span>
+          </div>
+          <div class="pt-4 border-t">
+            <div class="flex justify-between text-xl font-bold">
+              <span>实付款</span>
+              <span class="text-orange-500">¥{{ total | divided_by: 100 | round }}</span>
+            </div>
+          </div>
+          <button class="w-full py-4 bg-orange-500 text-white rounded-lg cursor-not-allowed">
+            去结算 ({{ selected_ids.size }})
+          </button>
+          <a
+            href="/"
+            class="block mt-4 w-full py-4 bg-blue-500 text-white text-center rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            返回首页
+          </a>
+        </div>
+
+        <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+          <p class="text-sm text-gray-500">
+            · 满299减30优惠已自动抵扣<br>
+            · 已享受免运费优惠
+          </p>
+        </div>
+      </div>
     </div>
   </main>
 </div>
+
+<style>
+  .bg-gray-50 { background-color: #f9fafb; }
+  .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+  .max-w-7xl { max-width: 1280px; }
+  .rounded-lg { border-radius: 0.5rem; }
+  .hover\:bg-blue-600:hover { background-color: #2563eb; }
+</style>
